@@ -1,0 +1,168 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[expansion=false]{microtype}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{itemsep=2pt,topsep=4pt}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% ---------- notation ----------
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\fail}{\bot}
+\newcommand{\take}{\mathsf{take}}
+\newcommand{\ser}{\mathsf{ser}}
+\newcommand{\parse}{\mathsf{par}}
+\newcommand{\wf}{\mathsf{wf}}
+\newcommand{\sem}[1]{[\![ #1 ]\!]}
+\newcommand{\Bits}{\mathsf{Bits}}
+\newcommand{\Seq}{\mathsf{Seq}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% ---------- log entries ----------
+% \entry{date}{title}{files}
+\newcommand{\entry}[3]{%
+  \section{#2}
+  \noindent{\small\textit{#1} \quad \code{#3}}\par\medskip}
+\newenvironment{status}{\par\medskip\noindent\textbf{Status.}\ }{\par}
+
+\title{Honours Project Logbook\\[4pt]
+\large Verified bit-level parsing}
+\author{Stan Kestens}
+\date{Last updated: \today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+% =====================================================================
+\entry{8 October 2026}{Rocq basics}{Exercises.v (not in this repo)}
+
+Exercises to get used to Rocq: simple programs on \code{bool}, \code{nat} and lists, and proofs by rewriting and induction (e.g.\ $n+0=n$, $n+S\,m=S(n+m)$, $\neg\neg b=b$, and lemmas about \code{++} on lists). The last part introduces \code{take\_bits}, which is reused in everything below.
+
+\begin{status}
+Several exercises are still \code{Admitted}.
+\end{status}
+
+% =====================================================================
+\entry{8 October 2026}{A parser for RISC-V I-type}{code/rv32-decode/Parser.v}
+
+Bits are represented as \code{list bool}, with bit $0$ first. Write $\B^*$ for bit strings, $u\cdot v$ for concatenation and $|u|$ for length.
+
+\begin{definition}[take]
+$\take_n:\B^*\to(\B^*\times\B^*)_\fail$ splits off the first $n$ bits: $\take_n(b)=(u,r)$ if $b=u\cdot r$ with $|u|=n$, and $\fail$ if $|b|<n$.
+\end{definition}
+
+\begin{lemma}\label{lem:take}
+\leavevmode
+\begin{enumerate}[label=(\alph*)]
+\item If $|u|=n$ then $\take_n(u\cdot r)=(u,r)$. \hfill\code{take\_bits\_app}
+\item If $|u|=n$ then $\take_n(u)=(u,\varepsilon)$. \hfill\code{take\_bits\_all}
+\item If $\take_n(b)=(u,r)$ then $b=u\cdot r$. \hfill\code{take\_bits\_split}
+\end{enumerate}
+\end{lemma}
+
+An I-type instruction has five fields, read from bit $0$ upwards:
+\[ \text{opcode (7)} \mid \text{rd (5)} \mid \text{funct3 (3)} \mid \text{rs1 (5)} \mid \text{imm (12)}. \]
+An instruction is a 5-tuple of bit strings, and it is \emph{well-formed} if each field has the right length. The serializer concatenates the fields; the parser takes them off one by one with $\take$ and fails if anything is left after the last field.
+
+\begin{theorem}[Roundtrip] \hfill\code{parse\_serialize}\\
+If $i$ is well-formed, then $\parse(\ser(i))=i$.
+\end{theorem}
+
+\begin{theorem}[Exactness] \hfill\code{serialize\_parse}\\
+If $\parse(b)=i$, then $\ser(i)=b$.
+\end{theorem}
+
+Both proofs go field by field, using Lemma~\ref{lem:take}. There are also two examples: \code{addi x1, x0, 5} parses to the expected fields, and a 3-bit input is rejected.
+
+\begin{status}
+Done. The proofs are specific to this one format.
+\end{status}
+
+% =====================================================================
+\entry{24 October 2026}{A generic format language}{code/format-lib/Format1\_Seq.v}
+
+Instead of one parser per format, formats are described by a datatype, and the parser and serializer are defined by recursion on the description. The correctness proofs are then done once, for every format.
+
+\begin{definition}[Formats]
+\[ f \;::=\; \Bits\ n \;\mid\; \Seq\ f_1\ f_2 \qquad (n\in\N) \]
+$\Bits\ n$ is a field of $n$ bits; $\Seq\ f_1\ f_2$ is $f_1$ followed by $f_2$.
+\end{definition}
+
+\begin{definition}[Values and well-formedness]
+The values of a format (\code{denote}) are
+\[ \sem{\Bits\ n}=\B^*, \qquad \sem{\Seq\ f_1\ f_2}=\sem{f_1}\times\sem{f_2}, \]
+and $\wf_f\subseteq\sem{f}$ requires every field to have the right length:
+\[ \wf_{\Bits\ n}(v) \iff |v|=n, \qquad \wf_{\Seq\ f_1\ f_2}(v_1,v_2) \iff \wf_{f_1}(v_1)\wedge\wf_{f_2}(v_2). \]
+\end{definition}
+
+\code{denote} maps a value of \code{fmt} to a type, so the parser and serializer have dependent types.
+
+\begin{definition}[Serializer and parser]
+\begin{align*}
+\ser_{\Bits\ n}(v) &= v, \\
+\ser_{\Seq\ f_1\ f_2}(v_1,v_2) &= \ser_{f_1}(v_1)\cdot\ser_{f_2}(v_2), \\
+\parse_{\Bits\ n}(b) &= \take_n(b), \\
+\parse_{\Seq\ f_1\ f_2}(b) &=
+\begin{cases}
+((v_1,v_2),b_2) & \text{if } \parse_{f_1}(b)=(v_1,b_1) \text{ and } \parse_{f_2}(b_1)=(v_2,b_2),\\
+\fail & \text{otherwise.}
+\end{cases}
+\end{align*}
+\end{definition}
+
+The theorems are stated with an arbitrary rest $r$ after the parsed part; without it the induction step for $\Seq$ does not go through.
+
+\begin{lemma}\hfill\code{parsing\_keeps\_length}\\
+If $\take_n(b)=(u,r)$ then $|u|=n$.
+\end{lemma}
+
+\begin{theorem}[Roundtrip]\label{thm:R} \hfill\code{parse\_serialize}\\
+For all $f$, $v$, $r$: if $\wf_f(v)$ then $\parse_f(\ser_f(v)\cdot r)=(v,r)$.
+\end{theorem}
+\begin{proof}
+Induction on $f$. $\Bits$: Lemma~\ref{lem:take}(a). $\Seq$: reassociate, then the induction hypothesis for $f_1$ with rest $\ser_{f_2}(v_2)\cdot r$ and for $f_2$ with rest $r$.
+\end{proof}
+
+\begin{theorem}[Exactness] \hfill\code{serialize\_parse}\\
+For all $f$, $b$, $v$, $r$: if $\parse_f(b)=(v,r)$ then $b=\ser_f(v)\cdot r$.
+\end{theorem}
+\begin{proof}
+Induction on $f$. $\Bits$: Lemma~\ref{lem:take}(c). $\Seq$: if both parses succeed, $b=\ser_{f_1}(v_1)\cdot b_1$ and $b_1=\ser_{f_2}(v_2)\cdot r$ by the induction hypotheses.
+\end{proof}
+
+\begin{theorem}[Closure] \hfill\code{parse\_wf}\\
+For all $f$, $b$, $v$, $r$: if $\parse_f(b)=(v,r)$ then $\wf_f(v)$.
+\end{theorem}
+\begin{proof}
+Induction on $f$, using the previous lemma for $\Bits$.
+\end{proof}
+
+\begin{corollary}[I-type] \hfill\code{itype\_roundtrip}\\
+With $f_I = \Seq\ (\Bits\ 7)\ (\Seq\ (\Bits\ 5)\ (\Seq\ (\Bits\ 3)\ (\Seq\ (\Bits\ 5)\ (\Bits\ 12))))$: if $\wf_{f_I}(v)$ then $\parse_{f_I}(\ser_{f_I}(v))=(v,\varepsilon)$.
+\end{corollary}
+\begin{proof}
+Theorem~\ref{thm:R} with $r=\varepsilon$.
+\end{proof}
+
+This recovers the roundtrip theorem of \code{Parser.v} without any proof steps specific to I-type.
+
+\begin{status}
+Done.
+\end{status}
+
+\end{document}

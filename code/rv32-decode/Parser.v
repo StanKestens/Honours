@@ -1,4 +1,4 @@
-(** * Parser.v — een simpele parser voor RISC-V I-type instructies
+(** * Parser.v: een simpele parser voor RISC-V I-type instructies
 
     Een instructie is 32 bits. Bij een I-type instructie (zoals ADDI)
     zijn die bits verdeeld in vijf velden. We lezen ze vanaf bit 0:
@@ -15,7 +15,7 @@ Import ListNotations.
 
 Definition bits := list bool.
 
-(** ** Stap 1: n bits afnemen *)
+(** ** n bits afnemen *)
 
 (** [take_bits n b] neemt de eerste n bits van b en geeft ook de rest terug.
     Zijn er niet genoeg bits, dan faalt het (None). *)
@@ -38,11 +38,11 @@ Lemma take_bits_app n f r : length f = n -> take_bits n (f ++ r) = Some (f, r).
 Proof.
   intros H. subst n.
   induction f as [| x f IH].
-  - reflexivity.(** lege lijst : take_bits (length []) ([] ++ r) = Some ([], r)*)
+  - reflexivity. (** lege lijst : take_bits (length []) ([] ++ r) = Some ([], r)*)
   - simpl. rewrite IH. reflexivity.
 Qed.
 
-(** Take all the bits, geen rest meer over*)
+(** Alle bits afnemen: geen rest. *)
 Lemma take_bits_all n f : length f = n -> take_bits n f = Some (f, []).
 Proof.
   intros H. rewrite <- (app_nil_r f) at 1. apply take_bits_app. exact H.
@@ -61,7 +61,7 @@ Proof.
       * discriminate H.
 Qed.
 
-(** ** Stap 2: de instructie, de parser en de serializer *)
+(** ** Instructie, parser en serializer *)
 
 Inductive itype := ITYPE (opcode rd funct3 rs1 imm : bits).
 
@@ -102,12 +102,10 @@ Definition parse (b : bits) : option itype :=
       end
   end end end end end.
 
-(** ** Stap 3: de twee stellingen *)
+(** ** Stellingen *)
 
 (** Roundtrip: een goed gevormde instructie serializeren en weer parsen
-    geeft dezelfde instructie terug.
-    [cbv beta iota] laat Rocq een match op [Some (..)] uitrekenen,
-    zonder take_bits zelf open te vouwen. *)
+    geeft dezelfde instructie terug. *)
 Theorem parse_serialize i : wf i -> parse (serialize i) = Some i.
 Proof.
   destruct i as [o d f s m]. cbn [wf serialize]. intros (Ho & Hd & Hf & Hs & Hm).
@@ -138,7 +136,7 @@ Proof.
   subst. rewrite app_nil_r. reflexivity.
 Qed.
 
-(** ** Stap 4: een voorbeeld
+(** ** Voorbeeld
 
     [addi x1, x0, 5]: opcode 19, rd 1, funct3 0, rs1 0, imm 5.
     Elk veld staat hier met bit 0 eerst. 19 = 1 + 2 + 16, dus 1,1,0,0,1,0,0. *)

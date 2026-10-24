@@ -1,0 +1,7 @@
+-Q code/format-lib FormatLib
+-R code/rv32-decode RV32
+
+code/format-lib/Bits.v
+code/format-lib/Format1_Seq.v
+code/format-lib/Format2_Const.v
+code/rv32-decode/Parser.v

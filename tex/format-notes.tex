@@ -1,0 +1,154 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[expansion=false]{microtype}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{itemsep=2pt,topsep=4pt}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{question}{Question}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\fail}{\bot}
+\newcommand{\take}{\mathsf{take}}
+\newcommand{\ser}{\mathsf{ser}}
+\newcommand{\parse}{\mathsf{par}}
+\newcommand{\wf}{\mathsf{wf}}
+\newcommand{\size}{\mathsf{size}}
+\newcommand{\sem}[1]{[\![ #1 ]\!]}
+\newcommand{\Bits}{\mathsf{Bits}}
+\newcommand{\Seq}{\mathsf{Seq}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\lstdefinelanguage{Rocq}{
+  morekeywords={Definition,Fixpoint,Lemma,Theorem,Corollary,Proof,Qed,Admitted,Inductive,match,with,end,fun,forall,Type,Prop},
+  sensitive=true, morecomment=[n]{(*}{*)}}
+\lstset{language=Rocq,basicstyle=\ttfamily\small,keywordstyle=\bfseries,commentstyle=\itshape\color{black!60},
+  columns=fullflexible,keepspaces=true,frame=single,framerule=0.4pt,rulecolor=\color{black!25},
+  xleftmargin=4pt,xrightmargin=4pt,aboveskip=8pt,belowskip=8pt}
+
+\title{A Generic Format Language for Bit Parsing\\[4pt]
+\large Notes on \code{code/format-lib/Format1\_Seq.v}}
+\author{Stan Kestens}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\noindent \code{code/rv32-decode/Parser.v} contains a parser and a serializer for one instruction format (RISC-V I-type), together with a roundtrip proof written specifically for that format. \code{Format1\_Seq.v} generalises this: a format is described by a value of an inductive type, the parser and serializer are defined by recursion on that description, and the correctness properties are proven once for every format. These notes write down what has been defined and proven so far.
+
+% =====================================================================
+\section{Setting}
+
+Let $\B=\{0,1\}$ and let $\B^*$ be the set of finite bit strings (in Rocq: \code{list bool}). We write $u\cdot v$ for concatenation, $|u|$ for the length and $\varepsilon$ for the empty string. A parser may fail; we write $X_\fail \coloneqq X\cup\{\fail\}$ (in Rocq: \code{option X}).
+
+\begin{definition}[take]
+For $n\in\N$, $\take_n:\B^*\to(\B^*\times\B^*)_\fail$ splits off the first $n$ bits:
+$\take_n(b)=(u,r)$ if $b=u\cdot r$ with $|u|=n$, and $\take_n(b)=\fail$ if $|b|<n$.
+\end{definition}
+
+\begin{lemma}\label{lem:take}
+For all $n$, $b$, $u$ and $r$:
+\begin{enumerate}[label=(\alph*)]
+\item if $|u|=n$ then $\take_n(u\cdot r)=(u,r)$; \hfill\code{take\_bits\_app}
+\item if $\take_n(b)=(u,r)$ then $b=u\cdot r$; \hfill\code{take\_bits\_split}
+\item if $\take_n(b)=(u,r)$ then $|u|=n$. \hfill\code{parsing\_keeps\_length}
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(a) By induction on $u$. (b) and (c) by induction on $n$, with a case distinction on $b$: if $b=\varepsilon$ and $n>0$ the parser fails, which contradicts the hypothesis.
+\end{proof}
+
+% =====================================================================
+\section{Format descriptions}
+
+\begin{definition}[Formats]
+Formats are given by the grammar
+\[ f \;::=\; \Bits\ n \;\mid\; \Seq\ f_1\ f_2 \qquad (n\in\N), \]
+where $\Bits\ n$ is a field of exactly $n$ bits and $\Seq\ f_1\ f_2$ is $f_1$ followed by $f_2$.
+\end{definition}
+
+\begin{definition}[Interpretation]
+Each format $f$ has a set of values $\sem{f}$:
+\[ \sem{\Bits\ n}=\B^*, \qquad \sem{\Seq\ f_1\ f_2}=\sem{f_1}\times\sem{f_2}. \]
+In Rocq this is \code{denote : fmt -> Type}, a function from values to types, which is why the parser below has a dependent type.
+\end{definition}
+
+Since $\sem{\Bits\ n}$ is all of $\B^*$ rather than strings of length $n$, the interpretation does not record field lengths. These are added as a separate predicate.
+
+\begin{definition}[Well-formedness]
+$\wf_f\subseteq\sem{f}$ is defined by
+\[ \wf_{\Bits\ n}(v) \iff |v|=n, \qquad \wf_{\Seq\ f_1\ f_2}(v_1,v_2) \iff \wf_{f_1}(v_1)\wedge\wf_{f_2}(v_2). \]
+\end{definition}
+
+\begin{definition}[Serializer and parser]
+$\ser_f:\sem{f}\to\B^*$ and $\parse_f:\B^*\to(\sem{f}\times\B^*)_\fail$ are defined by recursion on $f$:
+\begin{align*}
+\ser_{\Bits\ n}(v) &= v, \\
+\ser_{\Seq\ f_1\ f_2}(v_1,v_2) &= \ser_{f_1}(v_1)\cdot\ser_{f_2}(v_2), \\
+\parse_{\Bits\ n}(b) &= \take_n(b), \\
+\parse_{\Seq\ f_1\ f_2}(b) &=
+\begin{cases}
+((v_1,v_2),b_2) & \text{if } \parse_{f_1}(b)=(v_1,b_1) \text{ and } \parse_{f_2}(b_1)=(v_2,b_2),\\
+\fail & \text{otherwise.}
+\end{cases}
+\end{align*}
+\end{definition}
+
+\begin{example}[I-type]
+With $f_I \coloneqq \Seq\ (\Bits\ 7)\ (\Seq\ (\Bits\ 5)\ (\Seq\ (\Bits\ 3)\ (\Seq\ (\Bits\ 5)\ (\Bits\ 12))))$ we get the fields opcode, rd, funct3, rs1 and imm, read from bit 0 upwards, as in \code{Parser.v}. Here $\sem{f_I}=\B^*\times(\B^*\times(\B^*\times(\B^*\times\B^*)))$.
+\end{example}
+
+% =====================================================================
+\section{Correctness}
+
+The three properties below are stated with an arbitrary rest $r$, because that is what makes the induction step for $\Seq$ go through: the parser for $f_1$ has to stop exactly where $f_2$ begins.
+
+\begin{theorem}[Roundtrip]\label{thm:R}
+For every format $f$, every $v\in\sem{f}$ and every $r\in\B^*$:
+\[ \wf_f(v) \implies \parse_f(\ser_f(v)\cdot r)=(v,r). \] \hfill\code{parse\_serialize}
+\end{theorem}
+\begin{proof}
+By induction on $f$, for all $r$. For $\Bits\ n$ this is Lemma~\ref{lem:take}(a). For $\Seq\ f_1\ f_2$ and $v=(v_1,v_2)$, reassociate $\ser_{f_1}(v_1)\cdot\ser_{f_2}(v_2)\cdot r$. The induction hypothesis for $f_1$ with rest $\ser_{f_2}(v_2)\cdot r$ gives $(v_1,\ser_{f_2}(v_2)\cdot r)$, and the one for $f_2$ with rest $r$ gives $(v_2,r)$.
+\end{proof}
+
+\begin{theorem}[Exactness]\label{thm:S}
+For every format $f$ and all $b$, $v$, $r$:
+\[ \parse_f(b)=(v,r) \implies b=\ser_f(v)\cdot r. \] \hfill\code{serialize\_parse}
+\end{theorem}
+\begin{proof}
+By induction on $f$, for all $b$. For $\Bits\ n$ this is Lemma~\ref{lem:take}(b). For $\Seq\ f_1\ f_2$, a successful parse means $\parse_{f_1}(b)=(v_1,b_1)$ and $\parse_{f_2}(b_1)=(v_2,r)$. By the induction hypotheses $b=\ser_{f_1}(v_1)\cdot b_1$ and $b_1=\ser_{f_2}(v_2)\cdot r$, so $b=\ser_{f_1}(v_1)\cdot\ser_{f_2}(v_2)\cdot r$. If one of the two parses fails, the hypothesis is false.
+\end{proof}
+
+\begin{theorem}[Closure]\label{thm:C}
+For every format $f$ and all $b$, $v$, $r$:
+\[ \parse_f(b)=(v,r) \implies \wf_f(v). \] \hfill\code{parse\_wf}
+\end{theorem}
+\begin{proof}
+By induction on $f$. For $\Bits\ n$ this is Lemma~\ref{lem:take}(c); for $\Seq$ it follows directly from the induction hypotheses.
+\end{proof}
+
+\begin{corollary}[I-type]
+For all $v\in\sem{f_I}$ with $\wf_{f_I}(v)$: $\parse_{f_I}(\ser_{f_I}(v))=(v,\varepsilon)$. \hfill\code{itype\_roundtrip}
+\end{corollary}
+\begin{proof}
+Theorem~\ref{thm:R} with $r=\varepsilon$.
+\end{proof}
+
+This is the theorem of \code{Parser.v}, now without a single proof step specific to I-type.
+
+\end{document}
