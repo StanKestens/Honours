@@ -71,9 +71,12 @@ Proof.
   - simpl. intros r H. destruct H as [H1 H2]. destruct v as [v1 v2]. simpl. 
   rewrite app_assoc_reverse_deprecated. 
   rewrite IHf1. rewrite IHf2. reflexivity. apply H2. apply H1.
-  - (* FConst: TODO *) admit.
-Admitted.
-
+  - simpl. intros r. rewrite (take_bits_app (length c) c r).
+  + intros H. destruct (list_eq_dec bool_dec c c) as [Heq | Hneq]. 
+   *simpl. destruct v. reflexivity.
+   * exfalso.  apply Hneq. reflexivity.
+  +reflexivity.
+Qed.
 (* No bits get lost: the input is the serialized value followed by the rest. *)
 Theorem serialize_parse : forall f b v r,
   parse f b = Some (v, r) -> b = serialize f v ++ r.
@@ -90,8 +93,14 @@ Proof.
         reflexivity. 
         *discriminate.
       +discriminate.
-  - (* FConst: TODO *) admit.
-Admitted.
+  - simpl. intros b v r H.
+    destruct (take_bits (length c) b) as [[c' r'] |] eqn:E.
+    + destruct (list_eq_dec bool_dec c' c) as [Heq | Hneq].
+      * injection H as Hv Hr. rewrite <- Hr. rewrite <- Heq.
+        apply (take_bits_split (length c) b c' r' E).
+      * discriminate H.
+    + discriminate H.
+Qed.
 
 (* Whatever the parser returns is well-formed. *)
 Theorem parse_wf : forall f b v r,
@@ -108,8 +117,14 @@ Proof.
     rewrite Hv1 in E1. apply E1. injection H as Hv1 Hv2 Hr. simpl. rewrite <- Hv2. apply IHf2 in E2. apply E2.
     * discriminate.
    + discriminate.
-  - (* FConst: TODO *) admit.
-Admitted.
+  - simpl. intros b v r H.
+    destruct (take_bits (length c) b) as [[c' r'] |] eqn:E.
+    + destruct (list_eq_dec bool_dec c' c) as [Heq | Hneq].
+      * injection H as Hv Hr. rewrite <- Hr. rewrite <- Heq.
+        apply (take_bits_split (length c) b c' r' E).
+      * discriminate H.
+    + discriminate H.
+Qed.
 
 (** ** I-type as an instance *)
 
