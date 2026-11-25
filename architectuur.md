@@ -32,14 +32,6 @@ flowchart TB
   class HEUR,CC,FUSE,DEC,VAL mine
 ```
 
-## 2. De vier stellingen
-
-| # | Module | Stelling | Betekenis |
-|---|---|---|---|
-| 1 | `Compile.v` | `eval (CC choose P) w = first_match P w` | de boom kiest dezelfde rij als first-match, voor elke heuristiek |
-| 2 | `Fuse.v` | `eval (fuse t) w = eval t w` | switchen op meerdere bits tegelijk (Theiling) verandert niets |
-| 3 | `Decoder.v` | `decode (encode i) = Some i` | roundtrip |
-| 4 | `Validation.v` | `decode w = encdec_backwards w` | jouw decoder doet hetzelfde als die van Sail |
 
 ## 3. Modules
 
@@ -55,10 +47,4 @@ flowchart TB
 | `Decoder.v` | `decode`, `encode`, stelling 3 | te doen |
 | `Validation.v` | stelling 4 tegen `rv32d.v` | te doen |
 
-## 4. Volgorde van werken
 
-1. `Rows.v`, `Tree.v`, `Compile.v` met stelling 1, op RV32I zonder guards.
-2. `Heuristics.v`: Theiling-stap + Marangets heuristieken; meten (diepte, grootte).
-3. `Fuse.v` met stelling 2.
-4. Guards (vaste configuratie), dan `Decoder.v` met roundtrip.
-5. Plugin afwerken; `Validation.v` tegen `rv32d.v`.
