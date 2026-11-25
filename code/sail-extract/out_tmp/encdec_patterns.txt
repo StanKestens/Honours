@@ -1,0 +1,472 @@
+# MSB first. 0/1 = fixed bit, - = free field, ? = field restricted by a partial helper mapping
+# order = textual order of riscv.sail_project, then line number (first match wins)
+
+## encdec (32 bits)
+  0  -------------------------???????  UTYPE                  extensions/I/base_insts.sail:23
+  1  -------------------------1101111  JAL                    extensions/I/base_insts.sail:72
+  2  -----------------000-----1100111  JALR                   extensions/I/base_insts.sail:92
+  3  -----------------???-----1100011  BTYPE                  extensions/I/base_insts.sail:112
+  4  -----------------???-----0010011  ITYPE                  extensions/I/base_insts.sail:154
+  5  000000-----------001-----0010011  SHIFTIOP               extensions/I/base_insts.sail:192   when xlen == 64 | shamt[5] == 0b0
+  6  000000-----------101-----0010011  SHIFTIOP               extensions/I/base_insts.sail:195   when xlen == 64 | shamt[5] == 0b0
+  7  010000-----------101-----0010011  SHIFTIOP               extensions/I/base_insts.sail:198   when xlen == 64 | shamt[5] == 0b0
+  8  0000000----------000-----0110011  RTYPE                  extensions/I/base_insts.sail:225
+  9  0000000----------010-----0110011  RTYPE                  extensions/I/base_insts.sail:226
+ 10  0000000----------011-----0110011  RTYPE                  extensions/I/base_insts.sail:227
+ 11  0000000----------111-----0110011  RTYPE                  extensions/I/base_insts.sail:228
+ 12  0000000----------110-----0110011  RTYPE                  extensions/I/base_insts.sail:229
+ 13  0000000----------100-----0110011  RTYPE                  extensions/I/base_insts.sail:230
+ 14  0000000----------001-----0110011  RTYPE                  extensions/I/base_insts.sail:231
+ 15  0000000----------101-----0110011  RTYPE                  extensions/I/base_insts.sail:232
+ 16  0100000----------000-----0110011  RTYPE                  extensions/I/base_insts.sail:233
+ 17  0100000----------101-----0110011  RTYPE                  extensions/I/base_insts.sail:234
+ 18  -------------------------0000011  LOAD                   extensions/I/base_insts.sail:281   when valid_load_encdec(width, is_unsigned)
+ 19  -----------------0-------0100011  STORE                  extensions/I/base_insts.sail:312   when width <= xlen_bytes
+ 20  -----------------000-----0011011  ADDIW                  extensions/I/base_insts.sail:340   when xlen == 64
+ 21  0000000----------000-----0111011  RTYPEW                 extensions/I/base_insts.sail:357   when xlen == 64
+ 22  0100000----------000-----0111011  RTYPEW                 extensions/I/base_insts.sail:360   when xlen == 64
+ 23  0000000----------001-----0111011  RTYPEW                 extensions/I/base_insts.sail:363   when xlen == 64
+ 24  0000000----------101-----0111011  RTYPEW                 extensions/I/base_insts.sail:366   when xlen == 64
+ 25  0100000----------101-----0111011  RTYPEW                 extensions/I/base_insts.sail:369   when xlen == 64
+ 26  0000000----------001-----0011011  SHIFTIWOP              extensions/I/base_insts.sail:403   when xlen == 64
+ 27  0000000----------101-----0011011  SHIFTIWOP              extensions/I/base_insts.sail:406   when xlen == 64
+ 28  0100000----------101-----0011011  SHIFTIWOP              extensions/I/base_insts.sail:409   when xlen == 64
+ 29  10000011001100000000000000001111  FENCE_TSO              extensions/I/base_insts.sail:438
+ 30  -----------------000-----0001111  FENCE                  extensions/I/base_insts.sail:453
+ 31  00000000000000000000000001110011  ECALL                  extensions/I/base_insts.sail:541
+ 32  00110000001000000000000001110011  MRET                   extensions/I/base_insts.sail:613
+ 33  00010000001000000000000001110011  SRET                   extensions/I/base_insts.sail:663
+ 34  00000000000100000000000001110011  EBREAK                 extensions/I/base_insts.sail:737
+ 35  00010000010100000000000001110011  WFI                    extensions/I/base_insts.sail:748
+ 36  0001001----------000000001110011  SFENCE_VMA             extensions/I/base_insts.sail:774   when virtual_memory_supported() | not(config extensions.Svbare.sfence_vma_illegal_if_svbare_only : bool)
+ 37  ?????------------???-----0101111  AMO                    extensions/A/zaamo_insts.sail:62   when amo_encoding_valid(size, op, rs2, rd)
+ 38  00010--00000-----0-------0101111  LOADRES                extensions/A/zalrsc_insts.sail:28   when currentlyEnabled(Ext_Zalrsc) & lrsc_width_valid(width)
+ 39  00011------------0-------0101111  STORECON               extensions/A/zalrsc_insts.sail:61   when currentlyEnabled(Ext_Zalrsc) & lrsc_width_valid(width)
+ 40  0000001----------???-----0110011  MUL                    extensions/M/mext_insts.sail:25   when currentlyEnabled(Ext_M) | currentlyEnabled(Ext_Zmmul)
+ 41  0000001----------10------0110011  DIV                    extensions/M/mext_insts.sail:49   when currentlyEnabled(Ext_M)
+ 42  0000001----------11------0110011  REM                    extensions/M/mext_insts.sail:72   when currentlyEnabled(Ext_M)
+ 43  0000001----------000-----0111011  MULW                   extensions/M/mext_insts.sail:94   when xlen == 64 & (currentlyEnabled(Ext_M) | currentlyEnabled(Ext_Zmmul))
+ 44  0000001----------10------0111011  DIVW                   extensions/M/mext_insts.sail:116   when xlen == 64 & currentlyEnabled(Ext_M)
+ 45  0000001----------11------0111011  REMW                   extensions/M/mext_insts.sail:140   when xlen == 64 & currentlyEnabled(Ext_M)
+ 46  000010-----------001-----0011011  SLLIUW                 extensions/B/zba_insts.sail:16   when currentlyEnabled(Ext_Zba) & xlen == 64
+ 47  0000100----------000-----0111011  ZBA_RTYPEUW            extensions/B/zba_insts.sail:34   when currentlyEnabled(Ext_Zba) & xlen == 64
+ 48  0010000------------0-----0111011  ZBA_RTYPEUW            extensions/B/zba_insts.sail:39   when currentlyEnabled(Ext_Zba) & xlen == 64 & shamt != 0b00
+ 49  0010000------------0-----0110011  ZBA_RTYPE              extensions/B/zba_insts.sail:61   when currentlyEnabled(Ext_Zba) & shamt != 0b00
+ 50  0110000----------101-----0011011  RORIW                  extensions/B/zbb_insts.sail:16   when (currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)) & xlen == 64
+ 51  011000-----------101-----0010011  RORI                   extensions/B/zbb_insts.sail:32   when (currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)) & (xlen == 64 | shamt[5] == 0b0)
+ 52  0110000----------001-----0111011  ZBB_RTYPEW             extensions/B/zbb_insts.sail:49   when (currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)) & xlen == 64
+ 53  0110000----------101-----0111011  ZBB_RTYPEW             extensions/B/zbb_insts.sail:54   when (currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)) & xlen == 64
+ 54  0100000----------111-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:82   when currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)
+ 55  0100000----------110-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:87   when currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)
+ 56  0100000----------100-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:92   when currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)
+ 57  0000101----------110-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:97   when currentlyEnabled(Ext_Zbb)
+ 58  0000101----------111-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:102   when currentlyEnabled(Ext_Zbb)
+ 59  0000101----------100-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:107   when currentlyEnabled(Ext_Zbb)
+ 60  0000101----------101-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:112   when currentlyEnabled(Ext_Zbb)
+ 61  0110000----------001-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:117   when currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)
+ 62  0110000----------101-----0110011  ZBB_RTYPE              extensions/B/zbb_insts.sail:122   when currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)
+ 63  011000000100-----001-----0010011  ZBB_EXTOP              extensions/B/zbb_insts.sail:164   when currentlyEnabled(Ext_Zbb)
+ 64  011000000101-----001-----0010011  ZBB_EXTOP              extensions/B/zbb_insts.sail:169   when currentlyEnabled(Ext_Zbb)
+ 65  000010000000-----100-----0110011  ZBB_EXTOP              extensions/B/zbb_insts.sail:174   when currentlyEnabled(Ext_Zbb) & xlen == 32
+ 66  000010000000-----100-----0111011  ZBB_EXTOP              extensions/B/zbb_insts.sail:179   when currentlyEnabled(Ext_Zbb) & xlen == 64
+ 67  011010011000-----101-----0010011  REV8                   extensions/B/zbb_insts.sail:208   when (currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)) & xlen == 32
+ 68  011010111000-----101-----0010011  REV8                   extensions/B/zbb_insts.sail:212   when (currentlyEnabled(Ext_Zbb) | currentlyEnabled(Ext_Zbkb)) & xlen == 64
+ 69  001010000111-----101-----0010011  ORCB                   extensions/B/zbb_insts.sail:228   when currentlyEnabled(Ext_Zbb)
+ 70  011000000010-----001-----0010011  CPOP                   extensions/B/zbb_insts.sail:250   when currentlyEnabled(Ext_Zbb)
+ 71  011000000010-----001-----0011011  CPOPW                  extensions/B/zbb_insts.sail:266   when currentlyEnabled(Ext_Zbb) & xlen == 64
+ 72  011000000000-----001-----0010011  CLZ                    extensions/B/zbb_insts.sail:282   when currentlyEnabled(Ext_Zbb)
+ 73  011000000000-----001-----0011011  CLZW                   extensions/B/zbb_insts.sail:298   when currentlyEnabled(Ext_Zbb) & xlen == 64
+ 74  011000000001-----001-----0010011  CTZ                    extensions/B/zbb_insts.sail:314   when currentlyEnabled(Ext_Zbb)
+ 75  011000000001-----001-----0011011  CTZW                   extensions/B/zbb_insts.sail:330   when currentlyEnabled(Ext_Zbb) & xlen == 64
+ 76  0000101----------001-----0110011  CLMUL                  extensions/B/zbc_insts.sail:16   when currentlyEnabled(Ext_Zbc) | currentlyEnabled(Ext_Zbkc)
+ 77  0000101----------011-----0110011  CLMULH                 extensions/B/zbc_insts.sail:33   when currentlyEnabled(Ext_Zbc) | currentlyEnabled(Ext_Zbkc)
+ 78  0000101----------010-----0110011  CLMULR                 extensions/B/zbc_insts.sail:50   when currentlyEnabled(Ext_Zbc)
+ 79  010010-----------001-----0010011  ZBS_IOP                extensions/B/zbs_insts.sail:15   when currentlyEnabled(Ext_Zbs) & (xlen == 64 | shamt[5] == 0b0)
+ 80  010010-----------101-----0010011  ZBS_IOP                extensions/B/zbs_insts.sail:20   when currentlyEnabled(Ext_Zbs) & (xlen == 64 | shamt[5] == 0b0)
+ 81  011010-----------001-----0010011  ZBS_IOP                extensions/B/zbs_insts.sail:25   when currentlyEnabled(Ext_Zbs) & (xlen == 64 | shamt[5] == 0b0)
+ 82  001010-----------001-----0010011  ZBS_IOP                extensions/B/zbs_insts.sail:30   when currentlyEnabled(Ext_Zbs) & (xlen == 64 | shamt[5] == 0b0)
+ 83  0100100----------001-----0110011  ZBS_RTYPE              extensions/B/zbs_insts.sail:64   when currentlyEnabled(Ext_Zbs)
+ 84  0100100----------101-----0110011  ZBS_RTYPE              extensions/B/zbs_insts.sail:69   when currentlyEnabled(Ext_Zbs)
+ 85  0110100----------001-----0110011  ZBS_RTYPE              extensions/B/zbs_insts.sail:74   when currentlyEnabled(Ext_Zbs)
+ 86  0010100----------001-----0110011  ZBS_RTYPE              extensions/B/zbs_insts.sail:79   when currentlyEnabled(Ext_Zbs)
+ 87  0110--00000------100-----1110011  HLVTYPE                extensions/H/hext_insts.sail:16   when currentlyEnabled(Ext_H) & valid_load_encdec(width, is_unsigned)
+ 88  0110--000011-----100-----1110011  HLVTYPE                extensions/H/hext_insts.sail:20   when currentlyEnabled(Ext_H) & (width == 2 | width == 4)
+ 89  0110--1----------100000001110011  HSV                    extensions/H/hext_insts.sail:70   when currentlyEnabled(Ext_H) & width <= xlen_bytes
+ 90  0010001----------000000001110011  HFENCE_VVMA            extensions/H/hext_insts.sail:105   when currentlyEnabled(Ext_H)
+ 91  0110001----------000000001110011  HFENCE_GVMA            extensions/H/hext_insts.sail:128   when currentlyEnabled(Ext_H)
+ 92  -----------------0-------0000111  LOAD_FP                extensions/FD/fext_insts.sail:274   when float_load_store_width_supported(width)
+ 93  -----------------0-------0100111  STORE_FP               extensions/FD/fext_insts.sail:310   when float_load_store_width_supported(width)
+ 94  -----00----------???-----1000011  F_MADD_TYPE_S          extensions/FD/fext_insts.sail:346   when haveSingleFPU()
+ 95  -----00----------???-----1000111  F_MADD_TYPE_S          extensions/FD/fext_insts.sail:350   when haveSingleFPU()
+ 96  -----00----------???-----1001011  F_MADD_TYPE_S          extensions/FD/fext_insts.sail:354   when haveSingleFPU()
+ 97  -----00----------???-----1001111  F_MADD_TYPE_S          extensions/FD/fext_insts.sail:358   when haveSingleFPU()
+ 98  0000000----------???-----1010011  F_BIN_RM_TYPE_S        extensions/FD/fext_insts.sail:413   when haveSingleFPU()
+ 99  0000100----------???-----1010011  F_BIN_RM_TYPE_S        extensions/FD/fext_insts.sail:417   when haveSingleFPU()
+100  0001000----------???-----1010011  F_BIN_RM_TYPE_S        extensions/FD/fext_insts.sail:421   when haveSingleFPU()
+101  0001100----------???-----1010011  F_BIN_RM_TYPE_S        extensions/FD/fext_insts.sail:425   when haveSingleFPU()
+102  010110000000-----???-----1010011  F_UN_RM_FF_TYPE_S      extensions/FD/fext_insts.sail:479   when haveSingleFPU()
+103  110000000000-----???-----1010011  F_UN_RM_FX_TYPE_S      extensions/FD/fext_insts.sail:483   when haveSingleFPU()
+104  110000000001-----???-----1010011  F_UN_RM_FX_TYPE_S      extensions/FD/fext_insts.sail:487   when haveSingleFPU()
+105  110100000000-----???-----1010011  F_UN_RM_XF_TYPE_S      extensions/FD/fext_insts.sail:491   when haveSingleFPU()
+106  110100000001-----???-----1010011  F_UN_RM_XF_TYPE_S      extensions/FD/fext_insts.sail:495   when haveSingleFPU()
+107  110000000010-----???-----1010011  F_UN_RM_FX_TYPE_S      extensions/FD/fext_insts.sail:501   when haveSingleFPU() & xlen >= 64
+108  110000000011-----???-----1010011  F_UN_RM_FX_TYPE_S      extensions/FD/fext_insts.sail:505   when haveSingleFPU() & xlen >= 64
+109  110100000010-----???-----1010011  F_UN_RM_XF_TYPE_S      extensions/FD/fext_insts.sail:509   when haveSingleFPU() & xlen >= 64
+110  110100000011-----???-----1010011  F_UN_RM_XF_TYPE_S      extensions/FD/fext_insts.sail:513   when haveSingleFPU() & xlen >= 64
+111  0010000----------000-----1010011  F_BIN_TYPE_F_S         extensions/FD/fext_insts.sail:703   when haveSingleFPU()
+112  0010000----------001-----1010011  F_BIN_TYPE_F_S         extensions/FD/fext_insts.sail:707   when haveSingleFPU()
+113  0010000----------010-----1010011  F_BIN_TYPE_F_S         extensions/FD/fext_insts.sail:711   when haveSingleFPU()
+114  0010100----------000-----1010011  F_BIN_TYPE_F_S         extensions/FD/fext_insts.sail:715   when haveSingleFPU()
+115  0010100----------001-----1010011  F_BIN_TYPE_F_S         extensions/FD/fext_insts.sail:719   when haveSingleFPU()
+116  1010000----------010-----1010011  F_BIN_TYPE_X_S         extensions/FD/fext_insts.sail:723   when haveSingleFPU()
+117  1010000----------001-----1010011  F_BIN_TYPE_X_S         extensions/FD/fext_insts.sail:727   when haveSingleFPU()
+118  1010000----------000-----1010011  F_BIN_TYPE_X_S         extensions/FD/fext_insts.sail:731   when haveSingleFPU()
+119  111000000000-----001-----1010011  F_UN_TYPE_X_S          extensions/FD/fext_insts.sail:882   when haveSingleFPU()
+120  111000000000-----000-----1010011  F_UN_TYPE_X_S          extensions/FD/fext_insts.sail:886   when currentlyEnabled(Ext_F)
+121  111100000000-----000-----1010011  F_UN_TYPE_F_S          extensions/FD/fext_insts.sail:890   when currentlyEnabled(Ext_F)
+122  -----01----------???-----1000011  F_MADD_TYPE_D          extensions/FD/dext_insts.sail:249   when haveDoubleFPU() & validDoubleRegs([rs3, rs2, rs1, rd])
+123  -----01----------???-----1000111  F_MADD_TYPE_D          extensions/FD/dext_insts.sail:253   when haveDoubleFPU() & validDoubleRegs([rs3, rs2, rs1, rd])
+124  -----01----------???-----1001011  F_MADD_TYPE_D          extensions/FD/dext_insts.sail:257   when haveDoubleFPU() & validDoubleRegs([rs3, rs2, rs1, rd])
+125  -----01----------???-----1001111  F_MADD_TYPE_D          extensions/FD/dext_insts.sail:261   when haveDoubleFPU() & validDoubleRegs([rs3, rs2, rs1, rd])
+126  0000001----------???-----1010011  F_BIN_RM_TYPE_D        extensions/FD/dext_insts.sail:317   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+127  0000101----------???-----1010011  F_BIN_RM_TYPE_D        extensions/FD/dext_insts.sail:321   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+128  0001001----------???-----1010011  F_BIN_RM_TYPE_D        extensions/FD/dext_insts.sail:325   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+129  0001101----------???-----1010011  F_BIN_RM_TYPE_D        extensions/FD/dext_insts.sail:329   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+130  010110100000-----???-----1010011  F_UN_RM_FF_TYPE_D      extensions/FD/dext_insts.sail:383   when haveDoubleFPU() & validDoubleRegs([rs1, rd])
+131  110000100000-----???-----1010011  F_UN_RM_FX_TYPE_D      extensions/FD/dext_insts.sail:387   when haveDoubleFPU() & validDoubleRegs([rs1])
+132  110000100001-----???-----1010011  F_UN_RM_FX_TYPE_D      extensions/FD/dext_insts.sail:391   when haveDoubleFPU() & validDoubleRegs([rs1])
+133  110100100000-----???-----1010011  F_UN_RM_XF_TYPE_D      extensions/FD/dext_insts.sail:395   when haveDoubleFPU() & validDoubleRegs([rd])
+134  110100100001-----???-----1010011  F_UN_RM_XF_TYPE_D      extensions/FD/dext_insts.sail:399   when haveDoubleFPU() & validDoubleRegs([rd])
+135  010000000001-----???-----1010011  F_UN_RM_FF_TYPE_D      extensions/FD/dext_insts.sail:403   when haveDoubleFPU() & validDoubleRegs([rs1])
+136  010000100000-----???-----1010011  F_UN_RM_FF_TYPE_D      extensions/FD/dext_insts.sail:407   when haveDoubleFPU() & validDoubleRegs([rd])
+137  110000100010-----???-----1010011  F_UN_RM_FX_TYPE_D      extensions/FD/dext_insts.sail:413   when haveDoubleFPU() & xlen >= 64
+138  110000100011-----???-----1010011  F_UN_RM_FX_TYPE_D      extensions/FD/dext_insts.sail:417   when haveDoubleFPU() & xlen >= 64
+139  110100100010-----???-----1010011  F_UN_RM_XF_TYPE_D      extensions/FD/dext_insts.sail:421   when haveDoubleFPU() & xlen >= 64
+140  110100100011-----???-----1010011  F_UN_RM_XF_TYPE_D      extensions/FD/dext_insts.sail:425   when haveDoubleFPU() & xlen >= 64
+141  0010001----------000-----1010011  F_BIN_F_TYPE_D         extensions/FD/dext_insts.sail:650   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+142  0010001----------001-----1010011  F_BIN_F_TYPE_D         extensions/FD/dext_insts.sail:654   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+143  0010001----------010-----1010011  F_BIN_F_TYPE_D         extensions/FD/dext_insts.sail:658   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+144  0010101----------000-----1010011  F_BIN_F_TYPE_D         extensions/FD/dext_insts.sail:662   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+145  0010101----------001-----1010011  F_BIN_F_TYPE_D         extensions/FD/dext_insts.sail:666   when haveDoubleFPU() & validDoubleRegs([rs2, rs1, rd])
+146  1010001----------010-----1010011  F_BIN_X_TYPE_D         extensions/FD/dext_insts.sail:670   when haveDoubleFPU() & validDoubleRegs([rs2, rs1])
+147  1010001----------001-----1010011  F_BIN_X_TYPE_D         extensions/FD/dext_insts.sail:674   when haveDoubleFPU() & validDoubleRegs([rs2, rs1])
+148  1010001----------000-----1010011  F_BIN_X_TYPE_D         extensions/FD/dext_insts.sail:678   when haveDoubleFPU() & validDoubleRegs([rs2, rs1])
+149  111000100000-----001-----1010011  F_UN_X_TYPE_D          extensions/FD/dext_insts.sail:830   when haveDoubleFPU() & validDoubleRegs([rs1])
+150  111000100000-----000-----1010011  F_UN_X_TYPE_D          extensions/FD/dext_insts.sail:836   when currentlyEnabled(Ext_D) & xlen >= 64
+151  111100100000-----000-----1010011  F_UN_F_TYPE_D          extensions/FD/dext_insts.sail:840   when currentlyEnabled(Ext_D) & xlen >= 64
+152  0000010----------???-----1010011  F_BIN_RM_TYPE_H        extensions/FD/zfh_insts.sail:176   when haveHalfFPU()
+153  0000110----------???-----1010011  F_BIN_RM_TYPE_H        extensions/FD/zfh_insts.sail:180   when haveHalfFPU()
+154  0001010----------???-----1010011  F_BIN_RM_TYPE_H        extensions/FD/zfh_insts.sail:184   when haveHalfFPU()
+155  0001110----------???-----1010011  F_BIN_RM_TYPE_H        extensions/FD/zfh_insts.sail:188   when haveHalfFPU()
+156  -----10----------???-----1000011  F_MADD_TYPE_H          extensions/FD/zfh_insts.sail:240   when haveHalfFPU()
+157  -----10----------???-----1000111  F_MADD_TYPE_H          extensions/FD/zfh_insts.sail:244   when haveHalfFPU()
+158  -----10----------???-----1001011  F_MADD_TYPE_H          extensions/FD/zfh_insts.sail:248   when haveHalfFPU()
+159  -----10----------???-----1001111  F_MADD_TYPE_H          extensions/FD/zfh_insts.sail:252   when haveHalfFPU()
+160  0010010----------000-----1010011  F_BIN_F_TYPE_H         extensions/FD/zfh_insts.sail:308   when haveHalfFPU()
+161  0010010----------001-----1010011  F_BIN_F_TYPE_H         extensions/FD/zfh_insts.sail:312   when haveHalfFPU()
+162  0010010----------010-----1010011  F_BIN_F_TYPE_H         extensions/FD/zfh_insts.sail:316   when haveHalfFPU()
+163  0010110----------000-----1010011  F_BIN_F_TYPE_H         extensions/FD/zfh_insts.sail:320   when haveHalfFPU()
+164  0010110----------001-----1010011  F_BIN_F_TYPE_H         extensions/FD/zfh_insts.sail:324   when haveHalfFPU()
+165  1010010----------010-----1010011  F_BIN_X_TYPE_H         extensions/FD/zfh_insts.sail:328   when haveHalfFPU()
+166  1010010----------001-----1010011  F_BIN_X_TYPE_H         extensions/FD/zfh_insts.sail:332   when haveHalfFPU()
+167  1010010----------000-----1010011  F_BIN_X_TYPE_H         extensions/FD/zfh_insts.sail:336   when haveHalfFPU()
+168  010111000000-----???-----1010011  F_UN_RM_FF_TYPE_H      extensions/FD/zfh_insts.sail:490   when haveHalfFPU()
+169  110001000000-----???-----1010011  F_UN_RM_FX_TYPE_H      extensions/FD/zfh_insts.sail:494   when haveHalfFPU()
+170  110001000001-----???-----1010011  F_UN_RM_FX_TYPE_H      extensions/FD/zfh_insts.sail:498   when haveHalfFPU()
+171  110101000000-----???-----1010011  F_UN_RM_XF_TYPE_H      extensions/FD/zfh_insts.sail:502   when haveHalfFPU()
+172  110101000001-----???-----1010011  F_UN_RM_XF_TYPE_H      extensions/FD/zfh_insts.sail:506   when haveHalfFPU()
+173  010001000000-----???-----1010011  F_UN_RM_FF_TYPE_H      extensions/FD/zfh_insts.sail:510   when haveHalfMin()
+174  010001000001-----???-----1010011  F_UN_RM_FF_TYPE_H      extensions/FD/zfh_insts.sail:514   when haveHalfMin() & (haveDoubleFPU() & validDoubleRegs([rs1]))
+175  010000000010-----???-----1010011  F_UN_RM_FF_TYPE_H      extensions/FD/zfh_insts.sail:518   when haveHalfMin()
+176  010000100010-----???-----1010011  F_UN_RM_FF_TYPE_H      extensions/FD/zfh_insts.sail:522   when haveHalfMin() & (haveDoubleFPU() & validDoubleRegs([rd]))
+177  110001000010-----???-----1010011  F_UN_RM_FX_TYPE_H      extensions/FD/zfh_insts.sail:531   when haveHalfFPU() & xlen >= 64
+178  110001000011-----???-----1010011  F_UN_RM_FX_TYPE_H      extensions/FD/zfh_insts.sail:535   when haveHalfFPU() & xlen >= 64
+179  110101000010-----???-----1010011  F_UN_RM_XF_TYPE_H      extensions/FD/zfh_insts.sail:539   when haveHalfFPU() & xlen >= 64
+180  110101000011-----???-----1010011  F_UN_RM_XF_TYPE_H      extensions/FD/zfh_insts.sail:543   when haveHalfFPU() & xlen >= 64
+181  111001000000-----001-----1010011  F_UN_X_TYPE_H          extensions/FD/zfh_insts.sail:798   when haveHalfFPU()
+182  111001000000-----000-----1010011  F_UN_X_TYPE_H          extensions/FD/zfh_insts.sail:802   when currentlyEnabled(Ext_Zfhmin) | currentlyEnabled(Ext_Zfbfmin)
+183  111101000000-----000-----1010011  F_UN_F_TYPE_H          extensions/FD/zfh_insts.sail:806   when currentlyEnabled(Ext_Zfhmin) | currentlyEnabled(Ext_Zfbfmin)
+184  111101000001-----000-----1010011  FLI_H                  extensions/FD/zfa_insts.sail:15   when (currentlyEnabled(Ext_Zfh) | hartSupports(Ext_Zvfh)) & currentlyEnabled(Ext_Zfa)
+185  111100000001-----000-----1010011  FLI_S                  extensions/FD/zfa_insts.sail:65   when currentlyEnabled(Ext_Zfa)
+186  111100100001-----000-----1010011  FLI_D                  extensions/FD/zfa_insts.sail:115   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+187  0010110----------010-----1010011  FMINM_H                extensions/FD/zfa_insts.sail:165   when currentlyEnabled(Ext_Zfh) & currentlyEnabled(Ext_Zfa)
+188  0010110----------011-----1010011  FMAXM_H                extensions/FD/zfa_insts.sail:196   when currentlyEnabled(Ext_Zfh) & currentlyEnabled(Ext_Zfa)
+189  0010100----------010-----1010011  FMINM_S                extensions/FD/zfa_insts.sail:227   when currentlyEnabled(Ext_Zfa)
+190  0010100----------011-----1010011  FMAXM_S                extensions/FD/zfa_insts.sail:258   when currentlyEnabled(Ext_Zfa)
+191  0010101----------010-----1010011  FMINM_D                extensions/FD/zfa_insts.sail:289   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+192  0010101----------011-----1010011  FMAXM_D                extensions/FD/zfa_insts.sail:320   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+193  010001000100-----???-----1010011  FROUND_H               extensions/FD/zfa_insts.sail:351   when currentlyEnabled(Ext_Zfh) & currentlyEnabled(Ext_Zfa)
+194  010001000101-----???-----1010011  FROUNDNX_H             extensions/FD/zfa_insts.sail:380   when currentlyEnabled(Ext_Zfh) & currentlyEnabled(Ext_Zfa)
+195  010000000100-----???-----1010011  FROUND_S               extensions/FD/zfa_insts.sail:409   when currentlyEnabled(Ext_Zfa)
+196  010000000101-----???-----1010011  FROUNDNX_S             extensions/FD/zfa_insts.sail:438   when currentlyEnabled(Ext_Zfa)
+197  010000100100-----???-----1010011  FROUND_D               extensions/FD/zfa_insts.sail:467   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+198  010000100101-----???-----1010011  FROUNDNX_D             extensions/FD/zfa_insts.sail:496   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+199  111000100001-----000-----1010011  FMVH_X_D               extensions/FD/zfa_insts.sail:525   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa) & in32BitMode()
+200  1011001----------000-----1010011  FMVP_D_X               extensions/FD/zfa_insts.sail:544   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa) & in32BitMode()
+201  1010010----------100-----1010011  FLEQ_H                 extensions/FD/zfa_insts.sail:572   when currentlyEnabled(Ext_Zfh) & currentlyEnabled(Ext_Zfa)
+202  1010010----------101-----1010011  FLTQ_H                 extensions/FD/zfa_insts.sail:597   when currentlyEnabled(Ext_Zfh) & currentlyEnabled(Ext_Zfa)
+203  1010000----------100-----1010011  FLEQ_S                 extensions/FD/zfa_insts.sail:622   when currentlyEnabled(Ext_Zfa)
+204  1010000----------101-----1010011  FLTQ_S                 extensions/FD/zfa_insts.sail:647   when currentlyEnabled(Ext_Zfa)
+205  1010001----------100-----1010011  FLEQ_D                 extensions/FD/zfa_insts.sail:673   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+206  1010001----------101-----1010011  FLTQ_D                 extensions/FD/zfa_insts.sail:698   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+207  110000101000-----001-----1010011  FCVTMOD_W_D            extensions/FD/zfa_insts.sail:781   when currentlyEnabled(Ext_D) & currentlyEnabled(Ext_Zfa)
+208  0----------------111-----1010111  VSETVLI                extensions/V/vext_vset_insts.sail:152   when currentlyEnabled(Ext_Zve32x)
+209  1000000----------111-----1010111  VSETVL                 extensions/V/vext_vset_insts.sail:177   when currentlyEnabled(Ext_Zve32x)
+210  11---------------111-----1010111  VSETIVLI               extensions/V/vext_vset_insts.sail:203   when currentlyEnabled(Ext_Zve32x)
+211  ??????-----------000-----1010111  VVTYPE                 extensions/V/vext_arith_insts.sail:43   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64 & valid_wide_vvtype(funct6))
+212  ??????-----------000-----1010111  NVSTYPE                extensions/V/vext_arith_insts.sail:215   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+213  ??????-----------000-----1010111  NVTYPE                 extensions/V/vext_arith_insts.sail:290   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+214  0101110----------000-----1010111  MASKTYPEV              extensions/V/vext_arith_insts.sail:360   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+215  010111100000-----000-----1010111  MOVETYPEV              extensions/V/vext_arith_insts.sail:417   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+216  ??????-----------100-----1010111  VXTYPE                 extensions/V/vext_arith_insts.sail:480   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64 & valid_wide_vxtype(funct6))
+217  ??????-----------100-----1010111  NXSTYPE                extensions/V/vext_arith_insts.sail:605   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+218  ??????-----------100-----1010111  NXTYPE                 extensions/V/vext_arith_insts.sail:678   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+219  ??????-----------100-----1010111  VXSG                   extensions/V/vext_arith_insts.sail:753   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+220  0101110----------100-----1010111  MASKTYPEX              extensions/V/vext_arith_insts.sail:831   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+221  010111100000-----100-----1010111  MOVETYPEX              extensions/V/vext_arith_insts.sail:886   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+222  ??????-----------011-----1010111  VITYPE                 extensions/V/vext_arith_insts.sail:938   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+223  ??????-----------011-----1010111  NISTYPE                extensions/V/vext_arith_insts.sail:1036   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+224  ??????-----------011-----1010111  NITYPE                 extensions/V/vext_arith_insts.sail:1109   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+225  ??????-----------011-----1010111  VISG                   extensions/V/vext_arith_insts.sail:1184   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+226  0101110----------011-----1010111  MASKTYPEI              extensions/V/vext_arith_insts.sail:1261   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+227  010111100000-----011-----1010111  MOVETYPEI              extensions/V/vext_arith_insts.sail:1316   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+228  1001111-----?????011-----1010111  VMVRTYPE               extensions/V/vext_arith_insts.sail:1366   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+229  ??????-----------010-----1010111  MVVTYPE                extensions/V/vext_arith_insts.sail:1435   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64 & valid_wide_mvvtype(funct6))
+230  ??????-----------010-----1010111  MVVMATYPE              extensions/V/vext_arith_insts.sail:1560   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+231  ??????-----------010-----1010111  WVVTYPE                extensions/V/vext_arith_insts.sail:1628   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+232  ??????-----------010-----1010111  WVTYPE                 extensions/V/vext_arith_insts.sail:1706   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+233  ??????-----------010-----1010111  WMVVTYPE               extensions/V/vext_arith_insts.sail:1778   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+234  010010------?????010-----1010111  VEXTTYPE               extensions/V/vext_arith_insts.sail:1854   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+235  0100001-----00000010-----1010111  VMVXS                  extensions/V/vext_arith_insts.sail:1927   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+236  0101111----------010-----1010111  MVVCOMPRESS            extensions/V/vext_arith_insts.sail:1964   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+237  ??????-----------110-----1010111  MVXTYPE                extensions/V/vext_arith_insts.sail:2044   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64 & valid_wide_mvxtype(funct6))
+238  ??????-----------110-----1010111  MVXMATYPE              extensions/V/vext_arith_insts.sail:2180   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+239  ??????-----------110-----1010111  WVXTYPE                extensions/V/vext_arith_insts.sail:2247   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+240  ??????-----------110-----1010111  WXTYPE                 extensions/V/vext_arith_insts.sail:2323   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+241  ??????-----------110-----1010111  WMVXTYPE               extensions/V/vext_arith_insts.sail:2395   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+242  010000100000-----110-----1010111  VMVSX                  extensions/V/vext_arith_insts.sail:2460   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+243  ??????-----------001-----1010111  FVVTYPE                extensions/V/vext_fp_insts.sail:30   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+244  ??????-----------001-----1010111  FVVMATYPE              extensions/V/vext_fp_insts.sail:115   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+245  ??????-----------001-----1010111  FWVVTYPE               extensions/V/vext_fp_insts.sail:192   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+246  ??????-----------001-----1010111  FWVVMATYPE             extensions/V/vext_fp_insts.sail:264   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+247  ??????-----------001-----1010111  FWVTYPE                extensions/V/vext_fp_insts.sail:338   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+248  010010------?????001-----1010111  VFUNARY0               extensions/V/vext_fp_insts.sail:409   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+249  010010------?????001-----1010111  VFWUNARY0              extensions/V/vext_fp_insts.sail:531   when valid_widening_fp_conversion(vfwunary0)
+250  010010------?????001-----1010111  VFNUNARY0              extensions/V/vext_fp_insts.sail:666   when valid_narrowing_fp_conversion(vfnunary0)
+251  010011------?????001-----1010111  VFUNARY1               extensions/V/vext_fp_insts.sail:806   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+252  0100001-----00000001-----1010111  VFMVFS                 extensions/V/vext_fp_insts.sail:890   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+253  ??????-----------101-----1010111  FVFTYPE                extensions/V/vext_fp_insts.sail:945   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+254  ??????-----------101-----1010111  FVFMATYPE              extensions/V/vext_fp_insts.sail:1048   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+255  ??????-----------101-----1010111  FWVFTYPE               extensions/V/vext_fp_insts.sail:1123   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+256  ??????-----------101-----1010111  FWVFMATYPE             extensions/V/vext_fp_insts.sail:1193   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+257  ??????-----------101-----1010111  FWFTYPE                extensions/V/vext_fp_insts.sail:1262   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+258  0101110----------101-----1010111  VFMERGE                extensions/V/vext_fp_insts.sail:1324   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+259  010111100000-----101-----1010111  VFMV                   extensions/V/vext_fp_insts.sail:1384   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+260  010000100000-----101-----1010111  VFMVSF                 extensions/V/vext_fp_insts.sail:1427   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+261  ---000-00000-----???-----0000111  VLSEGTYPE              extensions/V/vext_mem_insts.sail:48   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= 5) | (currentlyEnabled(Ext_Zve64x) & vlewidth_pow(width) <= 6)
+262  ---000-10000-----???-----0000111  VLSEGFFTYPE            extensions/V/vext_mem_insts.sail:105   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= 5) | (currentlyEnabled(Ext_Zve64x) & vlewidth_pow(width) <= 6)
+263  ---000-00000-----???-----0100111  VSSEGTYPE              extensions/V/vext_mem_insts.sail:188   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= 5) | (currentlyEnabled(Ext_Zve64x) & vlewidth_pow(width) <= 6)
+264  ---010-----------???-----0000111  VLSSEGTYPE             extensions/V/vext_mem_insts.sail:245   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= 5) | (currentlyEnabled(Ext_Zve64x) & vlewidth_pow(width) <= 6)
+265  ---010-----------???-----0100111  VSSSEGTYPE             extensions/V/vext_mem_insts.sail:303   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= 5) | (currentlyEnabled(Ext_Zve64x) & vlewidth_pow(width) <= 6)
+266  ---0??-----------???-----0000111  VLXSEGTYPE             extensions/V/vext_mem_insts.sail:362   when currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= max_index_eew_exp
+267  ---0??-----------???-----0100111  VSXSEGTYPE             extensions/V/vext_mem_insts.sail:430   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= max_index_eew_exp)
+268  ???000101000-----???-----0000111  VLRETYPE               extensions/V/vext_mem_insts.sail:491   when (currentlyEnabled(Ext_Zve32x) & vlewidth_pow(width) <= 5) | (currentlyEnabled(Ext_Zve64x) & vlewidth_pow(width) <= 6)
+269  ???000101000-----000-----0100111  VSRETYPE               extensions/V/vext_mem_insts.sail:549   when currentlyEnabled(Ext_Zve32x)
+270  000000101011-----000-----???????  VMTYPE                 extensions/V/vext_mem_insts.sail:615   when currentlyEnabled(Ext_Zve32x)
+271  ??????1----------010-----1010111  MMTYPE                 extensions/V/vext_mask_insts.sail:28   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+272  010000------10000010-----1010111  VCPOP_M                extensions/V/vext_mask_insts.sail:86   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+273  010000------10001010-----1010111  VFIRST_M               extensions/V/vext_mask_insts.sail:114   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+274  010100------00001010-----1010111  VMSBF_M                extensions/V/vext_mask_insts.sail:144   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+275  010100------00011010-----1010111  VMSIF_M                extensions/V/vext_mask_insts.sail:185   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+276  010100------00010010-----1010111  VMSOF_M                extensions/V/vext_mask_insts.sail:226   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+277  010100------10000010-----1010111  VIOTA_M                extensions/V/vext_mask_insts.sail:271   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+278  010100-0000010001010-----1010111  VID_V                  extensions/V/vext_mask_insts.sail:316   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+279  ??????0----------000-----1010111  VVMTYPE                extensions/V/vext_vm_insts.sail:25   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+280  ??????1----------000-----1010111  VVMCTYPE               extensions/V/vext_vm_insts.sail:88   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+281  ??????0----------000-----1010111  VVMSTYPE               extensions/V/vext_vm_insts.sail:148   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+282  ??????-----------000-----1010111  VVCMPTYPE              extensions/V/vext_vm_insts.sail:216   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+283  ??????0----------100-----1010111  VXMTYPE                extensions/V/vext_vm_insts.sail:287   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+284  ??????1----------100-----1010111  VXMCTYPE               extensions/V/vext_vm_insts.sail:348   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+285  ??????0----------100-----1010111  VXMSTYPE               extensions/V/vext_vm_insts.sail:405   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+286  ??????-----------100-----1010111  VXCMPTYPE              extensions/V/vext_vm_insts.sail:473   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+287  ??????0----------011-----1010111  VIMTYPE                extensions/V/vext_vm_insts.sail:545   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+288  ??????1----------011-----1010111  VIMCTYPE               extensions/V/vext_vm_insts.sail:603   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+289  ??????0----------011-----1010111  VIMSTYPE               extensions/V/vext_vm_insts.sail:657   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+290  ??????-----------011-----1010111  VICMPTYPE              extensions/V/vext_vm_insts.sail:721   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+291  ??????-----------001-----1010111  FVVMTYPE               extensions/V/vext_fp_vm_insts.sail:25   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+292  ??????-----------101-----1010111  FVFMTYPE               extensions/V/vext_fp_vm_insts.sail:98   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+293  ??????-----------000-----1010111  RIVVTYPE               extensions/V/vext_red_insts.sail:22   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 16) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 32)
+294  ??????-----------010-----1010111  RMVVTYPE               extensions/V/vext_red_insts.sail:97   when (currentlyEnabled(Ext_Zve32x) & get_sew() <= 32) | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64)
+295  ??????-----------001-----1010111  RFVVTYPE               extensions/V/vext_fp_red_insts.sail:24   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve32f) & get_sew() == 32) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 64)
+296  ??????-----------001-----1010111  RFWVVTYPE              extensions/V/vext_fp_red_insts.sail:97   when (currentlyEnabled(Ext_Zvfh) & get_sew() == 16) | (currentlyEnabled(Ext_Zve64d) & get_sew() == 32)
+297  000100000000-----001-----0010011  SHA256SUM0             extensions/K/zkn_insts.sail:21   when currentlyEnabled(Ext_Zknh)
+298  000100000001-----001-----0010011  SHA256SUM1             extensions/K/zkn_insts.sail:26   when currentlyEnabled(Ext_Zknh)
+299  000100000010-----001-----0010011  SHA256SIG0             extensions/K/zkn_insts.sail:31   when currentlyEnabled(Ext_Zknh)
+300  000100000011-----001-----0010011  SHA256SIG1             extensions/K/zkn_insts.sail:36   when currentlyEnabled(Ext_Zknh)
+301  --10011----------000-----0110011  AES32ESMI              extensions/K/zkn_insts.sail:88   when currentlyEnabled(Ext_Zkne) & xlen == 32
+302  --10001----------000-----0110011  AES32ESI               extensions/K/zkn_insts.sail:108   when currentlyEnabled(Ext_Zkne) & xlen == 32
+303  --10111----------000-----0110011  AES32DSMI              extensions/K/zkn_insts.sail:132   when currentlyEnabled(Ext_Zknd) & xlen == 32
+304  --10101----------000-----0110011  AES32DSI               extensions/K/zkn_insts.sail:152   when currentlyEnabled(Ext_Zknd) & xlen == 32
+305  0101000----------000-----0110011  SHA512SUM0R            extensions/K/zkn_insts.sail:179   when currentlyEnabled(Ext_Zknh) & xlen == 32
+306  0101001----------000-----0110011  SHA512SUM1R            extensions/K/zkn_insts.sail:184   when currentlyEnabled(Ext_Zknh) & xlen == 32
+307  0101010----------000-----0110011  SHA512SIG0L            extensions/K/zkn_insts.sail:189   when currentlyEnabled(Ext_Zknh) & xlen == 32
+308  0101110----------000-----0110011  SHA512SIG0H            extensions/K/zkn_insts.sail:194   when currentlyEnabled(Ext_Zknh) & xlen == 32
+309  0101011----------000-----0110011  SHA512SIG1L            extensions/K/zkn_insts.sail:199   when currentlyEnabled(Ext_Zknh) & xlen == 32
+310  0101111----------000-----0110011  SHA512SIG1H            extensions/K/zkn_insts.sail:204   when currentlyEnabled(Ext_Zknh) & xlen == 32
+311  00110001---------001-----0010011  AES64KS1I              extensions/K/zkn_insts.sail:274   when (currentlyEnabled(Ext_Zkne) | currentlyEnabled(Ext_Zknd)) & (xlen == 64) & (rnum <_u 0xB)
+312  001100000000-----001-----0010011  AES64IM                extensions/K/zkn_insts.sail:279   when currentlyEnabled(Ext_Zknd) & xlen == 64
+313  0111111----------000-----0110011  AES64KS2               extensions/K/zkn_insts.sail:284   when (currentlyEnabled(Ext_Zkne) | currentlyEnabled(Ext_Zknd)) & xlen == 64
+314  0011011----------000-----0110011  AES64ESM               extensions/K/zkn_insts.sail:289   when currentlyEnabled(Ext_Zkne) & xlen == 64
+315  0011001----------000-----0110011  AES64ES                extensions/K/zkn_insts.sail:294   when currentlyEnabled(Ext_Zkne) & xlen == 64
+316  0011111----------000-----0110011  AES64DSM               extensions/K/zkn_insts.sail:299   when currentlyEnabled(Ext_Zknd) & xlen == 64
+317  0011101----------000-----0110011  AES64DS                extensions/K/zkn_insts.sail:304   when currentlyEnabled(Ext_Zknd) & xlen == 64
+318  000100000100-----001-----0010011  SHA512SUM0             extensions/K/zkn_insts.sail:401   when currentlyEnabled(Ext_Zknh) & xlen == 64
+319  000100000101-----001-----0010011  SHA512SUM1             extensions/K/zkn_insts.sail:406   when currentlyEnabled(Ext_Zknh) & xlen == 64
+320  000100000110-----001-----0010011  SHA512SIG0             extensions/K/zkn_insts.sail:411   when currentlyEnabled(Ext_Zknh) & xlen == 64
+321  000100000111-----001-----0010011  SHA512SIG1             extensions/K/zkn_insts.sail:416   when currentlyEnabled(Ext_Zknh) & xlen == 64
+322  000100001000-----001-----0010011  SM3P0                  extensions/K/zks_insts.sail:18   when currentlyEnabled(Ext_Zksh)
+323  000100001001-----001-----0010011  SM3P1                  extensions/K/zks_insts.sail:23   when currentlyEnabled(Ext_Zksh)
+324  --11000----------000-----0110011  SM4ED                  extensions/K/zks_insts.sail:56   when currentlyEnabled(Ext_Zksed)
+325  --11010----------000-----0110011  SM4KS                  extensions/K/zks_insts.sail:61   when currentlyEnabled(Ext_Zksed)
+326  0000100----------100-----0110011  ZBKB_RTYPE             extensions/K/zbkb_insts.sail:13   when currentlyEnabled(Ext_Zbkb)
+327  0000100----------111-----0110011  ZBKB_RTYPE             extensions/K/zbkb_insts.sail:18   when currentlyEnabled(Ext_Zbkb)
+328  0000100----------100-----0111011  ZBKB_PACKW             extensions/K/zbkb_insts.sail:46   when currentlyEnabled(Ext_Zbkb) & xlen == 64
+329  000010001111-----001-----0010011  ZIP                    extensions/K/zbkb_insts.sail:66   when currentlyEnabled(Ext_Zbkb) & xlen == 32
+330  000010001111-----101-----0010011  UNZIP                  extensions/K/zbkb_insts.sail:89   when currentlyEnabled(Ext_Zbkb) & xlen == 32
+331  011010000111-----101-----0010011  BREV8                  extensions/K/zbkb_insts.sail:112   when currentlyEnabled(Ext_Zbkb)
+332  0010100----------100-----0110011  XPERM8                 extensions/K/zbkx_insts.sail:15   when currentlyEnabled(Ext_Zbkx)
+333  0010100----------010-----0110011  XPERM4                 extensions/K/zbkx_insts.sail:40   when currentlyEnabled(Ext_Zbkx)
+334  000001-----------000-----1010111  VANDN_VV               extensions/vector_crypto/zvbb_insts.sail:15   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+335  000001-----------100-----1010111  VANDN_VX               extensions/vector_crypto/zvbb_insts.sail:59   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+336  010010------01010010-----1010111  VBREV_V                extensions/vector_crypto/zvbb_insts.sail:101   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+337  010010------01000010-----1010111  VBREV8_V               extensions/vector_crypto/zvbb_insts.sail:146   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+338  010010------01001010-----1010111  VREV8_V                extensions/vector_crypto/zvbb_insts.sail:188   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+339  010010------01100010-----1010111  VCLZ_V                 extensions/vector_crypto/zvbb_insts.sail:230   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+340  010010------01101010-----1010111  VCTZ_V                 extensions/vector_crypto/zvbb_insts.sail:273   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+341  010010------01110010-----1010111  VCPOP_V                extensions/vector_crypto/zvbb_insts.sail:316   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+342  010101-----------000-----1010111  VROL_VV                extensions/vector_crypto/zvbb_insts.sail:362   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+343  010101-----------100-----1010111  VROL_VX                extensions/vector_crypto/zvbb_insts.sail:407   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+344  010100-----------000-----1010111  VROR_VV                extensions/vector_crypto/zvbb_insts.sail:450   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+345  010100-----------100-----1010111  VROR_VX                extensions/vector_crypto/zvbb_insts.sail:495   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+346  01010------------011-----1010111  VROR_VI                extensions/vector_crypto/zvbb_insts.sail:538   when currentlyEnabled(Ext_Zvkb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+347  110101-----------000-----1010111  VWSLL_VV               extensions/vector_crypto/zvbb_insts.sail:581   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+348  110101-----------100-----1010111  VWSLL_VX               extensions/vector_crypto/zvbb_insts.sail:634   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+349  110101-----------011-----1010111  VWSLL_VI               extensions/vector_crypto/zvbb_insts.sail:684   when currentlyEnabled(Ext_Zvbb) & (get_sew() <= 32 | (get_sew() == 64 & currentlyEnabled(Ext_Zve64x)))
+350  001100-----------010-----1010111  VCLMUL_VV              extensions/vector_crypto/zvbc_insts.sail:14   when currentlyEnabled(Ext_Zvbc) & get_sew() == 64
+351  001100-----------110-----1010111  VCLMUL_VX              extensions/vector_crypto/zvbc_insts.sail:60   when currentlyEnabled(Ext_Zvbc) & get_sew() == 64
+352  001101-----------010-----1010111  VCLMULH_VV             extensions/vector_crypto/zvbc_insts.sail:104   when currentlyEnabled(Ext_Zvbc) & get_sew() == 64
+353  001101-----------110-----1010111  VCLMULH_VX             extensions/vector_crypto/zvbc_insts.sail:150   when currentlyEnabled(Ext_Zvbc) & get_sew() == 64
+354  1011001----------010-----1110111  VGHSH_VV               extensions/vector_crypto/zvkg_insts.sail:14   when currentlyEnabled(Ext_Zvkg) & get_sew() == 32 & zvk_check_encdec(128, 4)
+355  1010001-----10001010-----1110111  VGMUL_VV               extensions/vector_crypto/zvkg_insts.sail:68   when currentlyEnabled(Ext_Zvkg) & get_sew() == 32 & zvk_check_encdec(128, 4)
+356  ??????1-----00001010-----1110111  VAESDF                 extensions/vector_crypto/zvkned_insts.sail:19   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4) & (funct6 == ZVK_VAESDF_VV | zvk_valid_reg_overlap(vs2, vd, get_lmul_pow()))
+357  ??????1-----00000010-----1110111  VAESDM                 extensions/vector_crypto/zvkned_insts.sail:76   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4) & (funct6 == ZVK_VAESDM_VV | zvk_valid_reg_overlap(vs2, vd, get_lmul_pow()))
+358  ??????1-----00011010-----1110111  VAESEF                 extensions/vector_crypto/zvkned_insts.sail:134   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4) & (funct6 == ZVK_VAESEF_VV | zvk_valid_reg_overlap(vs2, vd, get_lmul_pow()))
+359  ??????1-----00010010-----1110111  VAESEM                 extensions/vector_crypto/zvkned_insts.sail:191   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4) & (funct6 == ZVK_VAESEM_VV | zvk_valid_reg_overlap(vs2, vd, get_lmul_pow()))
+360  1000101----------010-----1110111  VAESKF1_VI             extensions/vector_crypto/zvkned_insts.sail:244   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4)
+361  1010101----------010-----1110111  VAESKF2_VI             extensions/vector_crypto/zvkned_insts.sail:298   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4)
+362  1010011-----00111010-----1110111  VAESZ_VS               extensions/vector_crypto/zvkned_insts.sail:353   when currentlyEnabled(Ext_Zvkned) & get_sew() == 32 & zvk_check_encdec(128, 4) & zvk_valid_reg_overlap(vs2, vd, get_lmul_pow())
+363  1000011----------010-----1110111  VSM4K_VI               extensions/vector_crypto/zvksed_insts.sail:14   when currentlyEnabled(Ext_Zvksed) & get_sew() == 32 & zvk_check_encdec(128, 4)
+364  1010001-----10000010-----1110111  ZVKSM4RTYPE            extensions/vector_crypto/zvksed_insts.sail:72   when currentlyEnabled(Ext_Zvksed) & get_sew() == 32 & zvk_check_encdec(128, 4)
+365  1010011-----10000010-----1110111  ZVKSM4RTYPE            extensions/vector_crypto/zvksed_insts.sail:77   when currentlyEnabled(Ext_Zvksed) & get_sew() == 32 & zvk_check_encdec(128, 4) & zvk_valid_reg_overlap(vs2, vd, get_lmul_pow())
+366  1011011----------010-----1110111  VSHA2MS_VV             extensions/vector_crypto/zvknhab_insts.sail:15   when ((currentlyEnabled(Ext_Zvknha) & get_sew() == 32) | (currentlyEnabled(Ext_Zvknhb) & (get_sew() == 32 | get_sew() == 64))) & zvknhab_check_encdec(vs2, vs1, vd)
+367  ??????1----------010-----1110111  ZVKSHA2TYPE            extensions/vector_crypto/zvknhab_insts.sail:83   when ((currentlyEnabled(Ext_Zvknha) & get_sew() == 32) | (currentlyEnabled(Ext_Zvknhb) & (get_sew() == 32 | get_sew() == 64))) & zvknhab_check_encdec(vs2, vs1, vd)
+368  1000001----------010-----1110111  VSM3ME_VV              extensions/vector_crypto/zvksh_insts.sail:14   when currentlyEnabled(Ext_Zvksh) & get_sew() == 32 & zvk_check_encdec(256, 8) & zvk_valid_reg_overlap(vs2, vd, get_lmul_pow())
+369  1010111----------010-----1110111  VSM3C_VI               extensions/vector_crypto/zvksh_insts.sail:63   when currentlyEnabled(Ext_Zvksh) & get_sew() == 32 & zvk_check_encdec(256, 8) & zvk_valid_reg_overlap(vs2, vd, get_lmul_pow())
+370  ??????-----------010-----1010111  ZVABD_VV               extensions/Zvabd/zvabd_insts.sail:24   when currentlyEnabled(Ext_Zvabd) & (get_sew() <= 32 | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64))
+371  ??????-----------110-----1010111  ZVABD_VX               extensions/Zvabd/zvabd_insts.sail:76   when currentlyEnabled(Ext_Zvabd) & (get_sew() <= 32 | (currentlyEnabled(Ext_Zve64x) & get_sew() <= 64))
+372  ??????-----------000-----1010111  ZVWABDA_VV             extensions/Zvabd/zvabd_insts.sail:139   when currentlyEnabled(Ext_Zvabd) & valid_zvwabda_sew(get_sew())
+373  ??????-----------100-----1010111  ZVWABDA_VX             extensions/Zvabd/zvabd_insts.sail:210   when currentlyEnabled(Ext_Zvabd) & valid_zvwabda_sew(get_sew())
+374  -----------------0??-----1110011  CSRReg                 extensions/Zicsr/zicsr_insts.sail:23   when currentlyEnabled(Ext_Zicsr)
+375  -----------------1??-----1110011  CSRImm                 extensions/Zicsr/zicsr_insts.sail:27   when currentlyEnabled(Ext_Zicsr)
+376  0001011----------000000001110011  SINVAL_VMA             extensions/Svinval/svinval_insts.sail:13   when currentlyEnabled(Ext_Svinval)
+377  00011000000000000000000001110011  SFENCE_W_INVAL         extensions/Svinval/svinval_insts.sail:28   when currentlyEnabled(Ext_Svinval)
+378  00011000000100000000000001110011  SFENCE_INVAL_IR        extensions/Svinval/svinval_insts.sail:46   when currentlyEnabled(Ext_Svinval)
+379  0010011----------000000001110011  HINVAL_VVMA            extensions/Svinval/svinval_insts.sail:64   when currentlyEnabled(Ext_Svinval) & currentlyEnabled(Ext_H)
+380  0110011----------000000001110011  HINVAL_GVMA            extensions/Svinval/svinval_insts.sail:79   when currentlyEnabled(Ext_Svinval) & currentlyEnabled(Ext_H)
+381  ????????????00000000000001110011  WRS                    extensions/Zawrs/zawrs_insts.sail:21   when currentlyEnabled(Ext_Zawrs)
+382  1100111-----00000100000001110011  SSPUSH                 extensions/cfi/zicfiss_insts.sail:19   when currentlyEnabled(Ext_Zicfiss) & zicfiss_xSSE(cur_privilege) & (rs2 == ra | rs2 == t0)
+383  110011011100-----100000001110011  SSPOPCHK               extensions/cfi/zicfiss_insts.sail:77   when currentlyEnabled(Ext_Zicfiss) & zicfiss_xSSE(cur_privilege) & (rs1 == ra | rs1 == t0)
+384  11001101110000000100-----1110011  SSRDP                  extensions/cfi/zicfiss_insts.sail:133   when currentlyEnabled(Ext_Zicfiss) & zicfiss_xSSE(cur_privilege)
+385  01001------------0-------0101111  SSAMOSWAP              extensions/cfi/zicfiss_insts.sail:155   when currentlyEnabled(Ext_Zicfiss) & (width == 4 | (xlen == 64 & width == 8))
+386  0000111----------???-----0110011  ZICOND_RTYPE           extensions/Zicond/zicond_insts.sail:19   when currentlyEnabled(Ext_Zicond)
+387  ????????????-----010000000001111  ZICBOM                 extensions/Zicbom/zicbom_insts.sail:23   when currentlyEnabled(Ext_Zicbom)
+388  -------?????-----110000000010011  ZICBOP                 extensions/Zicbop/zicbop_insts.sail:23   when currentlyEnabled(Ext_Zicbop)
+389  -----------------???-----1100011  BITYPE                 extensions/Zibi/zibi_insts.sail:21   when currentlyEnabled(Ext_Zibi)
+390  000000000100-----010000000001111  ZICBOZ                 extensions/Zicboz/zicboz_insts.sail:17   when currentlyEnabled(Ext_Zicboz)
+391  -----------------001-----0001111  FENCEI                 extensions/Zifencei/zifencei_insts.sail:19   when currentlyEnabled(Ext_Zifencei)
+392  0000000?????00000000000000110011  NTL                    extensions/Zihintntl/zihintntl_insts.sail:16   when currentlyEnabled(Ext_Zihintntl)
+393  00000001000000000000000000001111  PAUSE                  extensions/Zihintpause/zihintpause_insts.sail:14   when currentlyEnabled(Ext_Zihintpause)
+394  ?????00------------------0101111  ZILX_LOAD              extensions/Zilx/zilx_insts.sail:25   when currentlyEnabled(Ext_Zilx) & zilx_encoding_valid(mode, width, is_unsigned)
+395  --------------------000000010111  LPAD                   extensions/cfi/zicfilp_insts.sail:18   when currentlyEnabled(Ext_Zicfilp)
+396  010001001000-----???-----1010011  FCVT_BF16_S            extensions/bfloat16/zfbfmin_insts.sail:16   when currentlyEnabled(Ext_Zfbfmin)
+397  010000000110-----???-----1010011  FCVT_S_BF16            extensions/bfloat16/zfbfmin_insts.sail:41   when currentlyEnabled(Ext_Zfbfmin)
+398  010010------11101001-----1010111  VFNCVTBF16_F_F_W       extensions/bfloat16/zvfbfmin_insts.sail:14   when currentlyEnabled(Ext_Zvfbfmin) & get_sew() == 16
+399  010010------01101001-----1010111  VFWCVTBF16_F_F_V       extensions/bfloat16/zvfbfmin_insts.sail:66   when currentlyEnabled(Ext_Zvfbfmin) & get_sew() == 16
+400  111011-----------001-----1010111  VFWMACCBF16_VV         extensions/bfloat16/zvfbfwma_insts.sail:14   when currentlyEnabled(Ext_Zvfbfwma) & get_sew() == 16
+401  111011-----------101-----1010111  VFWMACCBF16_VF         extensions/bfloat16/zvfbfwma_insts.sail:70   when currentlyEnabled(Ext_Zvfbfwma) & get_sew() == 16
+402  11111010110111100000000000001011  STOP_FETCHING          extensions/rmem/insts_rmem.sail:17
+403  11000000110111100000000000001011  THREAD_START           extensions/rmem/insts_rmem.sail:27
+404  1-00--0111-------100-----1110011  ZIMOP_MOP_R            mops/Zimop/zimop_insts.sail:15   when currentlyEnabled(Ext_Zimop)
+405  1-00--1----------100-----1110011  ZIMOP_MOP_RR           mops/Zimop/zimop_insts.sail:20   when currentlyEnabled(Ext_Zimop)
+406  --------------------------------  ILLEGAL                postlude/insts_end.sail:13
+
+## encdec_compressed (16 bits)
+  0  000-00000-----01  C_NOP                  extensions/C/zca_insts.sail:18   when currentlyEnabled(Ext_Zca)
+  1  000-----------00  C_ADDI4SPN             extensions/C/zca_insts.sail:36   when currentlyEnabled(Ext_Zca) & (nzimm != 0b00000000)
+  2  010-----------00  C_LW                   extensions/C/zca_insts.sail:53   when currentlyEnabled(Ext_Zca)
+  3  011-----------00  C_LD                   extensions/C/zca_insts.sail:70   when xlen == 64 & currentlyEnabled(Ext_Zca)
+  4  110-----------00  C_SW                   extensions/C/zca_insts.sail:88   when currentlyEnabled(Ext_Zca)
+  5  111-----------00  C_SD                   extensions/C/zca_insts.sail:105   when xlen == 64 & currentlyEnabled(Ext_Zca)
+  6  000-----------01  C_ADDI                 extensions/C/zca_insts.sail:125   when currentlyEnabled(Ext_Zca) & rsd != zreg
+  7  001-----------01  C_JAL                  extensions/C/zca_insts.sail:141   when xlen == 32 & currentlyEnabled(Ext_Zca)
+  8  001-----------01  C_ADDIW                extensions/C/zca_insts.sail:155   when xlen == 64 & currentlyEnabled(Ext_Zca) & rsd != zreg
+  9  010-----------01  C_LI                   extensions/C/zca_insts.sail:170   when currentlyEnabled(Ext_Zca)
+ 10  011-00010-----01  C_ADDI16SP             extensions/C/zca_insts.sail:185   when currentlyEnabled(Ext_Zca) & nzimm != 0b000000
+ 11  011-----------01  C_LUI                  extensions/C/zca_insts.sail:204   when currentlyEnabled(Ext_Zca) & rd != sp & imm != 0b000000
+ 12  100-00--------01  C_SRLI                 extensions/C/zca_insts.sail:221   when currentlyEnabled(Ext_Zca) & (xlen == 64 | shamt[5] == 0b0)
+ 13  100-01--------01  C_SRAI                 extensions/C/zca_insts.sail:237   when currentlyEnabled(Ext_Zca) & (xlen == 64 | shamt[5] == 0b0)
+ 14  100-10--------01  C_ANDI                 extensions/C/zca_insts.sail:253   when currentlyEnabled(Ext_Zca)
+ 15  100011---00---01  C_SUB                  extensions/C/zca_insts.sail:268   when currentlyEnabled(Ext_Zca)
+ 16  100011---01---01  C_XOR                  extensions/C/zca_insts.sail:284   when currentlyEnabled(Ext_Zca)
+ 17  100011---10---01  C_OR                   extensions/C/zca_insts.sail:300   when currentlyEnabled(Ext_Zca)
+ 18  100011---11---01  C_AND                  extensions/C/zca_insts.sail:316   when currentlyEnabled(Ext_Zca)
+ 19  100111---00---01  C_SUBW                 extensions/C/zca_insts.sail:332   when xlen == 64 & currentlyEnabled(Ext_Zca)
+ 20  100111---01---01  C_ADDW                 extensions/C/zca_insts.sail:349   when xlen == 64 & currentlyEnabled(Ext_Zca)
+ 21  101-----------01  C_J                    extensions/C/zca_insts.sail:366   when currentlyEnabled(Ext_Zca)
+ 22  110-----------01  C_BEQZ                 extensions/C/zca_insts.sail:379   when currentlyEnabled(Ext_Zca)
+ 23  111-----------01  C_BNEZ                 extensions/C/zca_insts.sail:392   when currentlyEnabled(Ext_Zca)
+ 24  000-----------10  C_SLLI                 extensions/C/zca_insts.sail:407   when currentlyEnabled(Ext_Zca) & (xlen == 64 | shamt[5] == 0b0)
+ 25  010-----------10  C_LWSP                 extensions/C/zca_insts.sail:420   when currentlyEnabled(Ext_Zca) & rd != zreg
+ 26  011-----------10  C_LDSP                 extensions/C/zca_insts.sail:436   when xlen == 64 & currentlyEnabled(Ext_Zca) & rd != zreg
+ 27  110-----------10  C_SWSP                 extensions/C/zca_insts.sail:452   when currentlyEnabled(Ext_Zca)
+ 28  111-----------10  C_SDSP                 extensions/C/zca_insts.sail:467   when xlen == 64 & currentlyEnabled(Ext_Zca)
+ 29  1000-----0000010  C_JR                   extensions/C/zca_insts.sail:483   when currentlyEnabled(Ext_Zca) & rs1 != zreg
+ 30  1001-----0000010  C_JALR                 extensions/C/zca_insts.sail:497   when currentlyEnabled(Ext_Zca) & rs1 != zreg
+ 31  1000----------10  C_MV                   extensions/C/zca_insts.sail:513   when currentlyEnabled(Ext_Zca) & rs2 != zreg
+ 32  1001000000000010  C_EBREAK               extensions/C/zca_insts.sail:528   when currentlyEnabled(Ext_Zca)
+ 33  1001----------10  C_ADD                  extensions/C/zca_insts.sail:542   when currentlyEnabled(Ext_Zca) & rs2 != zreg
+ 34  100000--------00  C_LBU                  extensions/C/zcb_insts.sail:14   when currentlyEnabled(Ext_Zcb)
+ 35  100001---0----00  C_LHU                  extensions/C/zcb_insts.sail:33   when currentlyEnabled(Ext_Zcb)
+ 36  100001---1----00  C_LH                   extensions/C/zcb_insts.sail:52   when currentlyEnabled(Ext_Zcb)
+ 37  100010--------00  C_SB                   extensions/C/zcb_insts.sail:71   when currentlyEnabled(Ext_Zcb)
+ 38  100011---0----00  C_SH                   extensions/C/zcb_insts.sail:90   when currentlyEnabled(Ext_Zcb)
+ 39  100111---1100001  C_ZEXT_B               extensions/C/zcb_insts.sail:109   when currentlyEnabled(Ext_Zcb)
+ 40  100111---1100101  C_SEXT_B               extensions/C/zcb_insts.sail:127   when currentlyEnabled(Ext_Zcb) & currentlyEnabled(Ext_Zbb)
+ 41  100111---1101001  C_ZEXT_H               extensions/C/zcb_insts.sail:144   when currentlyEnabled(Ext_Zcb) & currentlyEnabled(Ext_Zbb)
+ 42  100111---1101101  C_SEXT_H               extensions/C/zcb_insts.sail:161   when currentlyEnabled(Ext_Zcb) & currentlyEnabled(Ext_Zbb)
+ 43  100111---1110001  C_ZEXT_W               extensions/C/zcb_insts.sail:178   when currentlyEnabled(Ext_Zcb) & currentlyEnabled(Ext_Zba) & xlen == 64
+ 44  100111---1110101  C_NOT                  extensions/C/zcb_insts.sail:195   when currentlyEnabled(Ext_Zcb)
+ 45  100111---10---01  C_MUL                  extensions/C/zcb_insts.sail:213   when currentlyEnabled(Ext_Zcb) & (currentlyEnabled(Ext_M) | currentlyEnabled(Ext_Zmmul))
+ 46  011-----------10  C_FLWSP                extensions/FD/zcf_insts.sail:13   when currentlyEnabled(Ext_Zcf)
+ 47  111-----------10  C_FSWSP                extensions/FD/zcf_insts.sail:29   when currentlyEnabled(Ext_Zcf)
+ 48  011-----------00  C_FLW                  extensions/FD/zcf_insts.sail:45   when currentlyEnabled(Ext_Zcf)
+ 49  111-----------00  C_FSW                  extensions/FD/zcf_insts.sail:63   when currentlyEnabled(Ext_Zcf)
+ 50  001-----------10  C_FLDSP                extensions/FD/zcd_insts.sail:13   when currentlyEnabled(Ext_Zcd)
+ 51  101-----------10  C_FSDSP                extensions/FD/zcd_insts.sail:28   when currentlyEnabled(Ext_Zcd)
+ 52  001-----------00  C_FLD                  extensions/FD/zcd_insts.sail:43   when currentlyEnabled(Ext_Zcd)
+ 53  101-----------00  C_FSD                  extensions/FD/zcd_insts.sail:60   when currentlyEnabled(Ext_Zcd)
+ 54  0110000010000001  C_SSPUSH               extensions/cfi/zicfiss_insts.sail:62   when currentlyEnabled(Ext_Zicfiss) & currentlyEnabled(Ext_Zcmop) & zicfiss_xSSE(cur_privilege)
+ 55  0110001010000001  C_SSPOPCHK             extensions/cfi/zicfiss_insts.sail:119   when currentlyEnabled(Ext_Zicfiss) & currentlyEnabled(Ext_Zcmop) & zicfiss_xSSE(cur_privilege)
+ 56  100100000?????10  C_NTL                  extensions/Zihintntl/zihintntl_insts.sail:30   when currentlyEnabled(Ext_Zihintntl) & currentlyEnabled(Ext_Zca)
+ 57  01100---10000001  ZCMOP                  mops/Zcmop/zcmop_insts.sail:13   when currentlyEnabled(Ext_Zcmop)
+ 58  ----------------  C_ILLEGAL              postlude/insts_end.sail:21
